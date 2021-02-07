@@ -1,6 +1,6 @@
 import os
 import math
-import ../portaudio
+import nordaudio
 
 const
   SAMPLE_RATE = 44100
@@ -56,6 +56,7 @@ while i < TABLE_SIZE:
 
 data.left_phase = 0
 data.right_phase = 0
+
 discard initialize()
 outputParameters.device = getDefaultOutputDevice()
 outputParameters.channelCount = 2

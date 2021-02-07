@@ -1,6 +1,6 @@
 import os
 import math
-import ../portaudio
+import nordaudio
 
 const
   SAMPLE_RATE = 44100
@@ -47,26 +47,10 @@ while i < TABLE_SIZE:
   data.sine[i] = sin(2.0 * PI * (i / TABLE_SIZE))
   inc(i)
 
-proc dup(oldfd: FileHandle): FileHandle {.importc, header: "unistd.h".}
-proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: "unistd.h".}
-let tmpFileName = "portaudio_log.txt"
-
-template captureStderr*(body: untyped) =
-  var stdout_fileno = stderr.getFileHandle()
-  var stdout_dupfd = dup(stdout_fileno)
-  var tmp_file: File = open(tmpFileName, fmWrite)
-  var tmp_file_fd: FileHandle = tmp_file.getFileHandle()
-  discard dup2(tmp_file_fd, stdout_fileno)
-  body
-  tmp_file.flushFile()
-  tmp_file.close()
-  discard dup2(stdout_dupfd, stdout_fileno)
-
 data.left_phase = 0
 data.right_phase = 0
 data.time = 0
-captureStdErr:
-  discard initialize()
+discard initialize()
 outputParameters.device = getDefaultOutputDevice()
 outputParameters.channelCount = 2
 outputParameters.sampleFormat = paFloat32
