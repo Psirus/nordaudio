@@ -9,4 +9,4 @@ test "Scaffold":
   outputParameters.sampleFormat = paFloat32
   outputParameters.suggestedLatency = getDeviceInfo(outputParameters.device).defaultLowOutputLatency
   outputParameters.hostApiSpecificStreamInfo = nil
-  terminate()
+  discard terminate()

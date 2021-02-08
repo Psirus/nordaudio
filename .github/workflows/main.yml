@@ -1,0 +1,22 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: sudo apt install portaudio19-dev pulseaudio
+      - name: Create virtuall sound card
+        run: |
+            pulseaudio -D --exit-idle-time=-1
+            pactl load-module module-null-sink sink_name=DummyOutput sink_properties=device.description="Virtual_Dummy_Output"
+      - name: Install latest nim
+        run: |
+            curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y
+            echo "/home/runner/.nimble/bin" >> $GITHUB_PATH
+      - name: Run tests
+        run: nimble test
