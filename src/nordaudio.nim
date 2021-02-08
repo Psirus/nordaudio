@@ -1,36 +1,54 @@
 {.passL: "-lportaudio".}
+{.pragma: paHeader, header: "portaudio.h"}
 
 type
-  DeviceIndex* = cint
-  SampleFormat* = culong
-  Time* = cdouble
-  Stream* = pointer
-  StreamFlags* = culong
-  StreamCallbackFlags* = culong
-  Error* = cint
-  StreamCallbackTimeInfo* {.bycopy.} = object
+  DeviceIndex* {.importc: "PaDeviceIndex", paHeader.} = cint ## \
+  ## The type used to refer to audio devices. Values of this type usually range
+  ## from 0 to (getDeviceCount()-1), and may also take on the paNoDevice and
+  ## paUseHostApiSpecificDeviceSpecification values.
+  ##   
+  ## See also:
+  ## `getDeviceCount<#getDeviceCount>`_, `paNoDevice<#paNoDevice>`_,
+  ## `paUseHostApiSpecificDeviceSpecification<#paUseHostApiSpecificDeviceSpecification>`_
+  SampleFormat* {.importc: "Pa$1", paHeader.} = culong
+  Time* {.importc: "Pa$1", paHeader.} = cdouble
+  Stream* {.importc: "Pa$1", paHeader.} = object
+  StreamFlags* {.importc: "Pa$1", paHeader.} = culong
+  StreamCallbackFlags* {.importc: "Pa$1", paHeader.} = culong
+  Error* {.importc: "Pa$1", paHeader.} = cint
+  HostApiIndex* {.importc: "Pa$1", paHeader.} = cint
+
+  StreamCallbackTimeInfo* {.bycopy, importc: "struct Pa$1", paHeader.} = object
     inputBufferAdcTime*: Time
     currentTime*: Time
     outputBufferDacTime*: Time
 
-  StreamParameters* {.importc: "struct PaStreamParameters", header: "portaudio.h".} = object
+  StreamParameters* {.bycopy, importc: "struct Pa$1", paHeader.} = object
     device*: DeviceIndex
     channelCount*: cint
     sampleFormat*: SampleFormat
     suggestedLatency*: Time
     hostApiSpecificStreamInfo*: pointer
 
-  DeviceInfo* {.importc: "struct PaDeviceInfo", header: "portaudio.h".} = object
+  DeviceInfo* {.bycopy, importc: "struct Pa$1", paHeader.} = object
+    structVersion*: cint
+    name*: cstring
+    hostApi*: HostApiIndex
+    maxInputChannels*: cint
+    maxOutputChannels*: cint
+    defaultLowInputLatency*: Time
     defaultLowOutputLatency*: Time
+    defaultHighInputLatency*: Time
+    defaultHighOutputLatency*: Time
+    defaultSampleRate*: cdouble
 
-  StreamCallback* {.importc: "PaStreamCallback", header: "portaudio.h".} = proc (input: pointer;
+  StreamCallback* = proc (input: pointer;
       output: pointer; frameCount: culong;
       timeInfo: ptr StreamCallbackTimeInfo;
       statusFlags: StreamCallbackFlags; userData: pointer): cint {.cdecl.}
 
-  StreamFinishedCallback* {.header: "portaudio.h", importc: "PaStreamFinishedCallback"} = proc (userData: pointer) {.cdecl.}
-
-    
+  StreamFinishedCallback* {.importc: "Pa$1", paHeader.} = proc (userData: pointer) {.cdecl.}
+  
 const
   paFloat32* = cast[SampleFormat](0x00000001)
   paInt32* = cast[SampleFormat](0x00000002)
@@ -48,15 +66,18 @@ const
   paPrimeOutputBuffersUsingStreamCallback* = cast[StreamFlags](0x00000008)
   paPlatformSpecificFlags* = cast[StreamFlags](0xFFFF0000)
 
-proc initialize*(): Error {.header: "portaudio.h", importc: "Pa_Initialize"}
-proc getDefaultOutputDevice*(): DeviceIndex {.header: "portaudio.h", importc: "Pa_GetDefaultOutputDevice"}
-proc getDeviceInfo*(device: DeviceIndex): ptr DeviceInfo {.header: "portaudio.h", importc: "Pa_GetDeviceInfo"}
-proc openStream*(stream: Stream;
+proc initialize*(): Error {.importc: "Pa_Initialize", paHeader, cdecl.}
+proc getDefaultOutputDevice*(): DeviceIndex {.importc: "Pa_GetDefaultOutputDevice", paHeader, cdecl.}
+proc getDeviceInfo*(device: DeviceIndex): ptr DeviceInfo {.importc: "Pa_GetDeviceInfo", paHeader, cdecl.}
+proc openStream*(stream: ptr ptr Stream;
                  inputParameters: ptr StreamParameters;
                  outputParameters: ptr StreamParameters; sampleRate: cdouble;
                  framesPerBuffer: culong; streamFlags: StreamFlags;
-                 streamCallback: StreamCallback; userData: pointer): Error {.header: "portaudio.h", importc: "Pa_OpenStream", cdecl.}
-proc startStream*(stream: Stream): Error {.header: "portaudio.h", importc: "Pa_StartStream"}
-proc stopStream*(stream: Stream): Error {.header: "portaudio.h", importc: "Pa_StopStream"}
-proc terminate*() {.header: "portaudio.h", importc: "Pa_Terminate"}
-proc getStreamCpuLoad*(stream: Stream): cdouble {.header: "portaudio.h", importc: "Pa_GetStreamCpuLoad"}
+                 streamCallback: StreamCallback; userData: pointer): Error {.importc: "Pa_OpenStream", paHeader, cdecl.}
+proc setStreamFinishedCallback*(stream: ptr Stream;
+  streamFinishedCallback: StreamFinishedCallback): Error {.importc: "Pa_SetStreamFinishedCallback", paHeader, cdecl.}
+proc startStream*(stream: ptr Stream): Error {.importc: "Pa_StartStream", paHeader, cdecl.}
+proc stopStream*(stream: ptr Stream): Error {.importc: "Pa_StopStream", paHeader, cdecl.}
+proc closeStream*(stream: ptr Stream): Error {.importc: "Pa_CloseStream", paHeader, cdecl.}
+proc terminate*(): Error {.importc: "Pa_Terminate", paHeader, cdecl.}
+proc getStreamCpuLoad*(stream: ptr Stream): cdouble {.importc: "Pa_GetStreamCpuLoad", paHeader, cdecl.}

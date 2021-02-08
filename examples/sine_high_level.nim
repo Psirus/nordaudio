@@ -1,5 +1,4 @@
-import os
-import math
+import os, math
 import nordaudio
 
 const
@@ -26,13 +25,13 @@ proc callback(output: var openarray[float32], data: var TestData) =
     inc(data.right_phase, 3)
     if data.right_phase >= TABLE_SIZE:
       dec(data.right_phase, TABLE_SIZE)
-    inc(data.time)
+    inc data.time
 
 proc cCallback*(inputBuffer: pointer; outputBuffer: pointer;
                 framesPerBuffer: culong;
                 timeInfo: ptr StreamCallbackTimeInfo;
                 statusFlags: StreamCallbackFlags; userData: pointer): cint {.cdecl.} =
-  var data: ptr TestData = cast[ptr TestData](userData)
+  var data = cast[ptr TestData](userData)
   var tmp = cast[ptr UncheckedArray[float32]](outputBuffer)
   callback(toOpenArray(tmp, 0, 2*cast[int](framesPerBuffer)-1), data[])
   return 0
@@ -41,11 +40,11 @@ var
   outputParameters: StreamParameters
   stream: ptr Stream
   data: TestData
+  i = 0
 
-var i = 0
 while i < TABLE_SIZE:
   data.sine[i] = sin(2.0 * PI * (i / TABLE_SIZE))
-  inc(i)
+  inc i
 
 data.left_phase = 0
 data.right_phase = 0
@@ -64,4 +63,5 @@ sleep(1000)
 echo getStreamCpuLoad(stream)
 sleep(1000)
 discard stopStream(stream)
-terminate()
+discard closeStream(stream)
+discard terminate()
