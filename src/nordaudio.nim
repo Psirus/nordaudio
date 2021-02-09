@@ -6,7 +6,7 @@ type
   ## The type used to refer to audio devices. Values of this type usually range
   ## from 0 to (getDeviceCount()-1), and may also take on the paNoDevice and
   ## paUseHostApiSpecificDeviceSpecification values.
-  ##   
+  ##
   ## See also:
   ## `getDeviceCount<#getDeviceCount>`_, `paNoDevice<#paNoDevice>`_,
   ## `paUseHostApiSpecificDeviceSpecification<#paUseHostApiSpecificDeviceSpecification>`_
@@ -18,10 +18,16 @@ type
   Error* {.importc: "Pa$1", paHeader.} = cint
   HostApiIndex* {.importc: "Pa$1", paHeader.} = cint
 
-  StreamCallbackTimeInfo* {.bycopy, importc: "struct Pa$1", paHeader.} = object
-    inputBufferAdcTime*: Time
-    currentTime*: Time
-    outputBufferDacTime*: Time
+  StreamCallbackTimeInfo* {.bycopy, importc: "struct Pa$1", paHeader.} = object ## \
+  ## Timing information for the buffers passed to the stream callback.
+  ##
+  ## Time values are expressed in seconds and are synchronised with the time base
+  ## used by `getStreamTime()<#getStreamTime,ptr.Stream>`_ for the associated stream.
+  ##
+  ## See also: `StreamCallback<#StreamCallback>`_
+    inputBufferAdcTime*: Time ## The time when the first sample of the input buffer was captured at the ADC input
+    currentTime*: Time ## The time when the stream callback was invoked
+    outputBufferDacTime*: Time ## The time when the first sample of the output buffer will output at the DAC
 
   StreamParameters* {.bycopy, importc: "struct Pa$1", paHeader.} = object
     device*: DeviceIndex
@@ -81,3 +87,19 @@ proc stopStream*(stream: ptr Stream): Error {.importc: "Pa_StopStream", paHeader
 proc closeStream*(stream: ptr Stream): Error {.importc: "Pa_CloseStream", paHeader, cdecl.}
 proc terminate*(): Error {.importc: "Pa_Terminate", paHeader, cdecl.}
 proc getStreamCpuLoad*(stream: ptr Stream): cdouble {.importc: "Pa_GetStreamCpuLoad", paHeader, cdecl.}
+proc getStreamTime*(stream: ptr Stream): Time {.importc: "Pa_GetStreamTime", paHeader, cdecl.}
+  ## Returns the current time in seconds for a stream according to the same clock used
+  ## to generate callback PaStreamCallbackTimeInfo timestamps. The time values are
+  ## monotonically increasing and have unspecified origin.
+  ##
+  ## `getStreamTime` returns valid time values for the entire life of the stream,
+  ## from when the stream is opened until it is closed. Starting and stopping the stream
+  ## does not affect the passage of time returned by `getStreamTime`.
+  ##
+  ## This time may be used for synchronizing other events to the audio stream, for
+  ## example synchronizing audio to MIDI.
+  ##
+  ## The stream's current time in seconds, or 0 if an error occurred.
+  ##
+  ## See also:
+  ## `Time<#Time>`_, `StreamCallback<#StreamCallback>`_, `StreamCallbackTimeInfo<#StreamCallbackTimeInfo>`_

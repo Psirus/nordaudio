@@ -60,7 +60,8 @@ discard openStream(addr(stream), nil, addr(outputParameters), SAMPLE_RATE, FRAME
 
 discard startStream(stream)
 sleep(1000)
-echo getStreamCpuLoad(stream)
+echo "CPU load:", getStreamCpuLoad(stream)
+echo "Stream time:", getStreamTime(stream)
 sleep(1000)
 discard stopStream(stream)
 discard closeStream(stream)
