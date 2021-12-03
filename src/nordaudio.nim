@@ -54,7 +54,10 @@ type
       statusFlags: StreamCallbackFlags; userData: pointer): cint {.cdecl.}
 
   StreamFinishedCallback* {.importc: "Pa$1", paHeader.} = proc (userData: pointer) {.cdecl.}
-  
+
+  StreamCallbackResult* {.size: sizeof(cint).} = enum
+    paContinue = 0, paComplete = 1, paAbort = 2
+
 const
   paFloat32* = cast[SampleFormat](0x00000001)
   paInt32* = cast[SampleFormat](0x00000002)
@@ -74,6 +77,7 @@ const
 
 proc initialize*(): Error {.importc: "Pa_Initialize", paHeader, cdecl.}
 proc getDefaultOutputDevice*(): DeviceIndex {.importc: "Pa_GetDefaultOutputDevice", paHeader, cdecl.}
+proc getDefaultInputDevice*(): DeviceIndex {.importc: "Pa_GetDefaultInputDevice", paHeader, cdecl.}
 proc getDeviceInfo*(device: DeviceIndex): ptr DeviceInfo {.importc: "Pa_GetDeviceInfo", paHeader, cdecl.}
 proc openStream*(stream: ptr ptr Stream;
                  inputParameters: ptr StreamParameters;
@@ -88,18 +92,5 @@ proc closeStream*(stream: ptr Stream): Error {.importc: "Pa_CloseStream", paHead
 proc terminate*(): Error {.importc: "Pa_Terminate", paHeader, cdecl.}
 proc getStreamCpuLoad*(stream: ptr Stream): cdouble {.importc: "Pa_GetStreamCpuLoad", paHeader, cdecl.}
 proc getStreamTime*(stream: ptr Stream): Time {.importc: "Pa_GetStreamTime", paHeader, cdecl.}
-  ## Returns the current time in seconds for a stream according to the same clock used
-  ## to generate callback PaStreamCallbackTimeInfo timestamps. The time values are
-  ## monotonically increasing and have unspecified origin.
-  ##
-  ## `getStreamTime` returns valid time values for the entire life of the stream,
-  ## from when the stream is opened until it is closed. Starting and stopping the stream
-  ## does not affect the passage of time returned by `getStreamTime`.
-  ##
-  ## This time may be used for synchronizing other events to the audio stream, for
-  ## example synchronizing audio to MIDI.
-  ##
-  ## The stream's current time in seconds, or 0 if an error occurred.
-  ##
-  ## See also:
-  ## `Time<#Time>`_, `StreamCallback<#StreamCallback>`_, `StreamCallbackTimeInfo<#StreamCallbackTimeInfo>`_
+proc getDeviceCount*(): DeviceIndex {.importc: "Pa_GetDeviceCount", paHeader, cdecl.}
+proc isStreamActive*(stream: ptr Stream): Error {.importc: "Pa_IsStreamActive", paHeader, cdecl.}
