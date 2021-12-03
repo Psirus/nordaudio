@@ -94,3 +94,22 @@ proc getStreamCpuLoad*(stream: ptr Stream): cdouble {.importc: "Pa_GetStreamCpuL
 proc getStreamTime*(stream: ptr Stream): Time {.importc: "Pa_GetStreamTime", paHeader, cdecl.}
 proc getDeviceCount*(): DeviceIndex {.importc: "Pa_GetDeviceCount", paHeader, cdecl.}
 proc isStreamActive*(stream: ptr Stream): Error {.importc: "Pa_IsStreamActive", paHeader, cdecl.}
+
+proc dup(oldfd: FileHandle): FileHandle {.importc, header: "unistd.h".}
+proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: "unistd.h".}
+let tmpFileName = "portaudio_log.txt"
+
+template captureStderr(body: untyped) =
+  var stdout_fileno = stderr.getFileHandle()
+  var stdout_dupfd = dup(stdout_fileno)
+  var tmp_file: File = open(tmpFileName, fmWrite)
+  var tmp_file_fd: FileHandle = tmp_file.getFileHandle()
+  discard dup2(tmp_file_fd, stdout_fileno)
+  body
+  tmp_file.flushFile()
+  tmp_file.close()
+  discard dup2(stdout_dupfd, stdout_fileno)
+
+proc initNoDebug*(): Error =
+  captureStderr:
+    result = initialize()
